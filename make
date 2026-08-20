@@ -26,7 +26,7 @@ def main():
 
     elif target == "security":
         run_cmd("mkdir -p reports")
-        run_cmd(f"{BANDIT} -r appname -f json -o reports/bandit.json || true")
+        run_cmd(f"{BANDIT} -r appname -f json -o reports/bandit.json -ll")
 
     elif target == "test":
         run_cmd("mkdir -p reports")

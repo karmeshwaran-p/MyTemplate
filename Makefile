@@ -42,7 +42,7 @@ lint:
 
 security:
 	@mkdir -p reports
-	$(BANDIT) -r appname -f json -o reports/bandit.json || true
+	$(BANDIT) -r appname -f json -o reports/bandit.json -ll
 
 test:
 	@mkdir -p reports

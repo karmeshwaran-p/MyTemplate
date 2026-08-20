@@ -21,16 +21,9 @@ MyTemplate is a scaffold for starting new SaaS applications built using Python a
 | Basic Test Suite                      | ✅                                           | Starting point for you to build out tests                                                  |
 | VS Code Debugger & Editor             | ✅                                           | Configured to make you productive                                                          |
 | Tested on Windows 10, OSX, and Ubuntu | ✅                                           | Using Python 3                                                                             |
-| SaaS Recurring Billing                | 💲 (Requires purchasing a license to MyTemplate) | Team Billing, Usage Based Billing or Unlimited Plans                                       |
-| Commercial Usage                      | 💲 (License Required)                        | Commercial Usage requires a purchased license                                              |
-| Video Content                         | 💲                                           | Available as part of [the Fullstack Flask course](https://www.newline.co/fullstack-flask/) |
+| SaaS Recurring Billing                | ✅                                           | Team Billing, Usage Based Billing or Unlimited Plans                                       |
 
-## How to Buy
 
-| Store                  | Comes With                                                                                                                     | Price                                                                       |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
-| Fullstack Flask Course | The Fullstack Flask Course & Book, hours of videos explaining how to build a SaaS in Flask, and a single license to MyTemplate Pro | [On Sale (for ~$199) at Newline »](https://www.newline.co/fullstack-flask/) |
-| Commercial License     | A license for usage on a single site                                                                                           | [($199) »](https://gumroad.com/l/xFvLo)                                     |
 
 ## Getting Started for Evaluators
 
@@ -59,6 +52,12 @@ Run full CI pipeline: `make ci`
 ### 4. Known Findings & Rebranding Notes
 - **Security Finding**: Bandit flags `appname/services/security.py` L10 for MD5 usage. MD5 generates a non-critical 5-character salt namespace suffix (`unique_salt`); actual token signing/HMAC validation is handled securely by `itsdangerous.URLSafeTimedSerializer` with `SECRET_KEY` (documented known finding).
 - **Rebranding Note**: Upstream URLs (`github.com/Sumukh/Ignite`) are intentionally preserved to maintain source repository provenance.
+
+## Sample Reports
+
+- The primary `reports/` directory is gitignored by design and regenerated fresh on every `make ci` (or `./make ci`) run.
+- A pre-generated snapshot is provided in [`sample-reports/`](sample-reports/) for evaluators to review offline without running tests (`sample-reports/ruff.json`, `sample-reports/bandit.json`, `sample-reports/junit.xml`, `sample-reports/junit-ui.xml`, `sample-reports/coverage.xml`, `sample-reports/htmlcov/index.html`).
+- To regenerate live reports locally: `./make ci`
 
 ## Setup
 
@@ -151,25 +150,8 @@ Documentation is currently provided for installations on Dokku.
 
 ## License
 
-This is a commercial product. You may purchase a license for commercial use at [MyTemplate Website](https://ignite.sumukh.me)
+This repository is a candidate assessment submission intended for evaluation purposes only (not for public redistribution or commercial sale).
 
-Here's a summary:
-
-| Features                                         | MyTemplate     | (License) MyTemplate Premium |
-| ------------------------------------------------ | -------------- | ---------------------------- |
-| Cost                                             | Free           | $199 per site                |
-| Private Non Commercial Use                       | ✅             | ✅                           |
-| Commercial Use                                   | No             | ✅                           |
-| Ability to remove "Powered by MyTemplate" footer | No             | ✅                           |
-| Video Tutorials                                  | No             | ✅                           |
-| Re-license                                       | No             | Contact us                   |
-| Support                                          | No             | No                           |
-| Warranty                                         | Provided As-is | Provided As-is               |
-| Refunds                                          | N/A            | 30 Day                       |
-
-You can purchase a license at the [MyTemplate Store](https://gumroad.com/l/xFvLo) or on [Newline as part of the Fullstack Flask course](https://www.newline.co/fullstack-flask/)
-
-For more detailed license information see LICENSE.md
 
 ## Credits
 

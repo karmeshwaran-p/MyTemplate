@@ -45,7 +45,7 @@ jobs:
 
       - name: Bandit Security Scan
         run: |
-          bandit -r appname -f json -o reports/bandit.json
+          bandit -r appname -f json -o reports/bandit.json -ll
 
       - name: Run Tests
         env:
