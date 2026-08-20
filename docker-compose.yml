@@ -10,6 +10,8 @@ services:
     environment:
       - APPNAME_ENV=prod
       - SECRET_KEY=${SECRET_KEY:-devsecretkey12345}
+      - CACHE_TYPE=simple
+      - DATABASE_URL=sqlite:///../database.db
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/"]
       interval: 30s

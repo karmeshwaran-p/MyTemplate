@@ -57,10 +57,10 @@ class ProdConfig(Config):
 
     # You need to set this for the DB
     # The replace call is required for newer versions of python
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "").replace(
-        "postgres://", "postgresql://", 1
-    )
-    CACHE_TYPE = "redis"
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        "DATABASE_URL", "sqlite:///../database.db"
+    ).replace("postgres://", "postgresql://", 1)
+    CACHE_TYPE = os.getenv("CACHE_TYPE", "simple")
     CACHE_KEY_PREFIX = "appname-"
 
     # You should be using HTTPS in production anyway, but if you are not, turn
