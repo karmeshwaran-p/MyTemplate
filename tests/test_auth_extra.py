@@ -60,7 +60,9 @@ class TestAuthAdditionalFlows:
         assert response.status_code == 302
         assert "/dashboard/" in response.location
 
-    def test_resend_confirmation_get_for_unconfirmed_user_raises_for_missing_template(self, testapp):
+    def test_resend_confirmation_get_for_unconfirmed_user_raises_for_missing_template(
+        self, testapp
+    ):
         user = User.lookup("user@example.com")
         user.email_confirmed = False
         db.session.add(user)
@@ -70,7 +72,9 @@ class TestAuthAdditionalFlows:
         with pytest.raises(TemplateNotFound):
             testapp.get("/auth/resend-confirmation")
 
-    def test_resend_confirmation_post_sends_email_and_redirects(self, testapp, monkeypatch):
+    def test_resend_confirmation_post_sends_email_and_redirects(
+        self, testapp, monkeypatch
+    ):
         user = User.lookup("user@example.com")
         user.email_confirmed = False
         db.session.add(user)
@@ -78,7 +82,9 @@ class TestAuthAdditionalFlows:
         login_as_user(testapp)
 
         monkeypatch.setattr(auth_controller.ConfirmEmail, "send", lambda self: True)
-        response = testapp.post("/auth/resend-confirmation", data={}, follow_redirects=False)
+        response = testapp.post(
+            "/auth/resend-confirmation", data={}, follow_redirects=False
+        )
 
         assert response.status_code == 302
         assert "/dashboard/" in response.location
@@ -137,7 +143,9 @@ class TestAuthAdditionalFlows:
         login_as_user(testapp)
         admin = User.lookup("admin@example.com")
         team = admin.active_memberships[0].team
-        invite = TeamMember(team=team, user=admin, role="team member", inviter=admin, activated=False)
+        invite = TeamMember(
+            team=team, user=admin, role="team member", inviter=admin, activated=False
+        )
         db.session.add(invite)
         db.session.commit()
 
@@ -148,7 +156,9 @@ class TestAuthAdditionalFlows:
         login_as_user(testapp)
         user = User.lookup("user@example.com")
         team = user.active_memberships[0].team
-        invite = TeamMember(team=team, user=user, role="team member", inviter=user, activated=False)
+        invite = TeamMember(
+            team=team, user=user, role="team member", inviter=user, activated=False
+        )
         db.session.add(invite)
         db.session.commit()
 
@@ -156,11 +166,17 @@ class TestAuthAdditionalFlows:
         monkeypatch.setattr(
             billing_plans_module.stripe,
             "all_subscription_items",
-            lambda _subscription_id: [FakeSubscriptionItem(plan.stripe_product_id, "si_join_1")],
+            lambda _subscription_id: [
+                FakeSubscriptionItem(plan.stripe_product_id, "si_join_1")
+            ],
         )
-        monkeypatch.setattr(billing_plans_module.stripe, "report_usage", lambda *_args, **_kwargs: None)
+        monkeypatch.setattr(
+            billing_plans_module.stripe, "report_usage", lambda *_args, **_kwargs: None
+        )
 
-        response = testapp.get(f"/invite/{hashids.encode_id(invite.id)}/join", follow_redirects=False)
+        response = testapp.get(
+            f"/invite/{hashids.encode_id(invite.id)}/join", follow_redirects=False
+        )
 
         assert response.status_code == 302
         assert "/dashboard/" in response.location
@@ -215,6 +231,8 @@ class TestAuthAdditionalFlows:
         db.session.add(invite)
         db.session.commit()
 
-        response = testapp.get(f"/join/{hashids.encode_id(invite.id)}/secret-own", follow_redirects=False)
+        response = testapp.get(
+            f"/join/{hashids.encode_id(invite.id)}/secret-own", follow_redirects=False
+        )
         assert response.status_code == 302
         assert f"/invite/{hashids.encode_id(invite.id)}/join" in response.location

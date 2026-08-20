@@ -5,23 +5,29 @@ from flask_login import current_user
 
 from appname.extensions import cache
 
-main = Blueprint('main', __name__)
+main = Blueprint("main", __name__)
 
-@main.route('/')
+
+@main.route("/")
 def home():
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard_home.index'))
-    return render_template('lander/index.html', stripe_publishable_key=stripe.publishable_key)
+        return redirect(url_for("dashboard_home.index"))
+    return render_template(
+        "lander/index.html", stripe_publishable_key=stripe.publishable_key
+    )
 
-@main.route('/terms')
+
+@main.route("/terms")
 def terms():
-    return render_template('lander/terms.html')
+    return render_template("lander/terms.html")
 
-@main.route('/privacy')
+
+@main.route("/privacy")
 def privacy():
-    return render_template('lander/terms.html')
+    return render_template("lander/terms.html")
 
-@main.route('/beta')
+
+@main.route("/beta")
 @cache.cached(timeout=1000, unless=lambda: current_user.is_authenticated)
 def beta():
     return "Coming Soon", 200

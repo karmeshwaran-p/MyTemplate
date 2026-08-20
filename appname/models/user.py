@@ -15,21 +15,22 @@ logger = logging.getLogger(__name__)
 
 # (Ignite) TODO: Cleanup the methods here
 
+
 class User(Model, UserMixin):
     id = db.Column(db.Integer(), primary_key=True)
     full_name = db.Column(db.String())
     email = db.Column(db.String(), nullable=False)
     password = db.Column(db.String())
     admin = db.Column(db.Boolean())
-    role = db.Column(db.String(), default='user')
+    role = db.Column(db.String(), default="user")
     email_confirmed = db.Column(db.Boolean())
     user_api_key_hash = db.Column(db.String())
     billing_customer_id = db.Column(db.String())
 
     # Encrypted Secret (used for Two Factor Authentication)
-    encrypted_totp_secret = db.Column(EncryptedType(db.String,
-                                                    key=global_encryption_key_iv,
-                                                    engine=FernetEngine))
+    encrypted_totp_secret = db.Column(
+        EncryptedType(db.String, key=global_encryption_key_iv, engine=FernetEngine)
+    )
 
     GDPR_EXPORT_COLUMNS = {
         "id": "ID of the user",
@@ -37,16 +38,24 @@ class User(Model, UserMixin):
         "email": "User Email",
         "created": "When the user was created",
         "full_name": "The users full name",
-        "email_confirmed": "Whether the email was confirmation"
+        "email_confirmed": "Whether the email was confirmation",
     }
 
-    # TODO: Refactor out our override of __init__. It should either be a 
-    # seperate function or a class method. 
-    def __init__(self, email=None, password=None, admin=False,
-                 email_confirmed=False, team=None, name=None, 
-                 deleted=False, role='user'):
+    # TODO: Refactor out our override of __init__. It should either be a
+    # seperate function or a class method.
+    def __init__(
+        self,
+        email=None,
+        password=None,
+        admin=False,
+        email_confirmed=False,
+        team=None,
+        name=None,
+        deleted=False,
+        role="user",
+    ):
         if not email:
-            raise ValueError('No Email Provided')
+            raise ValueError("No Email Provided")
 
         self.email = email.lower().strip()
         self.full_name = name
@@ -54,7 +63,7 @@ class User(Model, UserMixin):
 
         if admin:
             self.admin = True
-            self.role = 'admin'  # TODO: Clean this up
+            self.role = "admin"  # TODO: Clean this up
 
         if password:
             self.set_password(password)
@@ -86,7 +95,7 @@ class User(Model, UserMixin):
 
     @property
     def is_admin(self):
-        return self.role == 'admin'
+        return self.role == "admin"
 
     @property
     def is_anonymous(self):
@@ -104,7 +113,11 @@ class User(Model, UserMixin):
 
     @property
     def admin_memberships(self):
-        return [member for member in self.memberships if member.activated and member.role == 'administrator']
+        return [
+            member
+            for member in self.memberships
+            if member.activated and member.role == "administrator"
+        ]
 
     @property
     def active_teams(self):
@@ -118,7 +131,7 @@ class User(Model, UserMixin):
         return self.active_memberships[0].id
 
     def __repr__(self):
-        return '<User {0}>'.format(self.email)
+        return "<User {0}>".format(self.email)
 
     @classmethod
     def lookup(cls, email):
@@ -133,6 +146,7 @@ class User(Model, UserMixin):
         db.session.add(new_user)
         db.session.commit()
         return new_user
+
 
 class OAuth(Model, OAuthConsumerMixin):
     __table_args__ = (db.UniqueConstraint("provider", "provider_user_id"),)
@@ -154,5 +168,5 @@ class OAuth(Model, OAuthConsumerMixin):
         "provider_user_login": "Provider User Login",
         "provider_user_id": "Provider User ID ",
         "provider": "The provider",
-        "created_at": "When it was created"
+        "created_at": "When it was created",
     }

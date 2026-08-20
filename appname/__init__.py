@@ -37,7 +37,7 @@ from appname.extensions import (
     storage,
     stripe,
     token,
-    branding
+    branding,
 )
 from appname.forms import SimpleForm
 
@@ -86,31 +86,32 @@ def create_app(object_name):
     stripe.init_app(app)
     hashids.init_app(app)
 
-    if app.config.get('SENTRY_DSN') and not app.debug:
+    if app.config.get("SENTRY_DSN") and not app.debug:
         sentry_sdk.init(
-            dsn=app.config.get('SENTRY_DSN'),
+            dsn=app.config.get("SENTRY_DSN"),
             integrations=[FlaskIntegration()],
             send_default_pii=True,
         )
 
         @app.errorhandler(500)
         def internal_server_error(error):
-            return render_template('errors/500.html',
-                                   event_id=last_event_id(),
-                                   public_dsn=app.config.get('SENTRY_PUBLIC_DSN')
-                                   ), 500
+            return render_template(
+                "errors/500.html",
+                event_id=last_event_id(),
+                public_dsn=app.config.get("SENTRY_PUBLIC_DSN"),
+            ), 500
 
     @app.errorhandler(404)
     def not_found_error(error):
         if request.path.startswith("/api"):
             return handle_api_error(error)
-        return render_template('errors/404.html'), 404
+        return render_template("errors/404.html"), 404
 
     @app.errorhandler(401)
     def permission_denied_error(error):
         if request.path.startswith("/api"):
             return handle_api_error(error)
-        return render_template('tabler/401.html'), 401
+        return render_template("tabler/401.html"), 401
 
     @app.before_request
     def check_for_confirmation(*args, **kwargs):
@@ -133,39 +134,41 @@ def create_app(object_name):
         assets_env.register(name, bundle)
 
     # Set some globals for Jinja templating
-    app.jinja_env.globals.update({
-        'utils': utils,
-        'view_helpers': view_helpers,
-        'debug': app.debug,
-        'constants': constants,
-        'simple_form': SimpleForm,
-        'branding': branding,
-        'features': {
-            'oauth':  app.config["GOOGLE_OAUTH_CLIENT_ID"] != 'bad_key',
-            'segment':  app.config["SEGMENT_ANALYTICS_KEY"],
-        },
-    })
+    app.jinja_env.globals.update(
+        {
+            "utils": utils,
+            "view_helpers": view_helpers,
+            "debug": app.debug,
+            "constants": constants,
+            "simple_form": SimpleForm,
+            "branding": branding,
+            "features": {
+                "oauth": app.config["GOOGLE_OAUTH_CLIENT_ID"] != "bad_key",
+                "segment": app.config["SEGMENT_ANALYTICS_KEY"],
+            },
+        }
+    )
 
     # register our blueprints
     app.register_blueprint(main)
     app.register_blueprint(auth)
-    app.register_blueprint(google_blueprint, url_prefix='/oauth')
+    app.register_blueprint(google_blueprint, url_prefix="/oauth")
     app.register_blueprint(store)
     app.register_blueprint(settings_blueprint)
 
     # Register user dashboard blueprints
     for blueprint in dashboard_blueprints:
-        app.register_blueprint(blueprint, url_prefix='/dashboard')
+        app.register_blueprint(blueprint, url_prefix="/dashboard")
 
     # API
-    app.register_blueprint(api_blueprint, url_prefix='/api')
+    app.register_blueprint(api_blueprint, url_prefix="/api")
     csrf.exempt(api_blueprint)
 
-    app.register_blueprint(stripe_blueprint, url_prefix='/webhooks')
+    app.register_blueprint(stripe_blueprint, url_prefix="/webhooks")
     csrf.exempt(stripe_blueprint)
 
     # Admin Tools
-    app.register_blueprint(jobs, url_prefix='/admin/rq')
+    app.register_blueprint(jobs, url_prefix="/admin/rq")
     admin.init_app(app)
 
     # If you use websockets/realtime features

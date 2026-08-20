@@ -78,7 +78,9 @@ class TestStripeService:
             called["count"] += 1
             raise AssertionError("Customer.create should not be called")
 
-        monkeypatch.setattr(stripe_service_module.stripe.Customer, "create", fail_create)
+        monkeypatch.setattr(
+            stripe_service_module.stripe.Customer, "create", fail_create
+        )
 
         stripe_service = Stripe()
         assert stripe_service.create_customer(user) == "cus_existing"
@@ -104,7 +106,12 @@ class TestStripeService:
         stripe_service = Stripe()
 
         no_customer_owner = SimpleNamespace(billing_customer_id=None)
-        assert stripe_service.customer_portal_link(no_customer_owner, return_url="https://example.com/return") is None
+        assert (
+            stripe_service.customer_portal_link(
+                no_customer_owner, return_url="https://example.com/return"
+            )
+            is None
+        )
 
         monkeypatch.setattr(
             stripe_service_module.stripe.billing_portal.Session,
@@ -112,7 +119,9 @@ class TestStripeService:
             lambda **_kwargs: {"url": "https://example.com/portal"},
         )
         owner = SimpleNamespace(billing_customer_id="cus_portal_1")
-        link = stripe_service.customer_portal_link(owner, return_url="https://example.com/return")
+        link = stripe_service.customer_portal_link(
+            owner, return_url="https://example.com/return"
+        )
         assert link == "https://example.com/portal"
 
     def test_usage_reporting_and_subscription_item_listing(self, testapp, monkeypatch):
@@ -155,7 +164,11 @@ class TestStripeService:
             captured["webhook_key"] = webhook_key
             return {"ok": True}
 
-        monkeypatch.setattr(stripe_service_module.stripe.Webhook, "construct_event", fake_construct_event)
+        monkeypatch.setattr(
+            stripe_service_module.stripe.Webhook,
+            "construct_event",
+            fake_construct_event,
+        )
 
         stripe_service = Stripe()
         stripe_service.webhook_key = "whsec_test"
@@ -176,14 +189,18 @@ class TestBillingPlans:
         assert not FreePlan(large_team).can_add_more_users
 
     def test_metered_plan_records_usage(self, testapp, monkeypatch):
-        team = SimpleNamespace(id=10, subscription_id="sub_metered_1", active_members=[1, 2, 3], members=[])
+        team = SimpleNamespace(
+            id=10, subscription_id="sub_metered_1", active_members=[1, 2, 3], members=[]
+        )
         plan = MeteredPlan(team)
         calls = {}
 
         monkeypatch.setattr(
             billing_plans_module.stripe,
             "all_subscription_items",
-            lambda _subscription_id: [FakeSubscriptionItem(plan.stripe_product_id, "si_metered_1")],
+            lambda _subscription_id: [
+                FakeSubscriptionItem(plan.stripe_product_id, "si_metered_1")
+            ],
         )
         monkeypatch.setattr(
             billing_plans_module.stripe,
@@ -197,11 +214,19 @@ class TestBillingPlans:
         assert calls["subscription_item_id"] == "si_metered_1"
         assert calls["quantity"] == 3
 
-    def test_metered_plan_raises_when_subscription_item_missing(self, testapp, monkeypatch):
-        team = SimpleNamespace(id=11, subscription_id="sub_metered_2", active_members=[1], members=[])
+    def test_metered_plan_raises_when_subscription_item_missing(
+        self, testapp, monkeypatch
+    ):
+        team = SimpleNamespace(
+            id=11, subscription_id="sub_metered_2", active_members=[1], members=[]
+        )
         plan = MeteredPlan(team)
 
-        monkeypatch.setattr(billing_plans_module.stripe, "all_subscription_items", lambda _subscription_id: [])
+        monkeypatch.setattr(
+            billing_plans_module.stripe,
+            "all_subscription_items",
+            lambda _subscription_id: [],
+        )
 
         with pytest.raises(Exception):
             plan.record_change_in_usage()
@@ -264,7 +289,12 @@ class TestUtilsAndMailers:
             return True
 
         monkeypatch.setattr(NotificationMailer, "deliver_now", fake_deliver_now)
-        mailer = NotificationMailer("person@example.com", "Subject line", "Message body", link="https://example.com")
+        mailer = NotificationMailer(
+            "person@example.com",
+            "Subject line",
+            "Message body",
+            link="https://example.com",
+        )
 
         with testapp.application.app_context():
             result = mailer.send()

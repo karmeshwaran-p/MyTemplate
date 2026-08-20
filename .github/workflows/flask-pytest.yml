@@ -12,25 +12,50 @@ jobs:
     strategy:
       max-parallel: 2
       matrix:
-        python-version: [3.12, 3.13]
+        python-version: ["3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+
       - uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
+
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          playwright install --with-deps
+
+      - name: Create Reports Directory
+        run: mkdir -p reports
+
+      - name: Ruff Lint & Format Check
+        run: |
+          ruff check appname tests
+          ruff format --check appname tests
+
+      - name: Bandit Security Scan
+        run: |
+          bandit -r appname -f json -o reports/bandit.json
 
       - name: Run Tests
+        env:
+          APPNAME_ENV: test
         run: |
-          py.test --junitxml=test-reports/results.xml --cov-report term-missing --cov=appname tests/
+          pytest --junitxml=reports/junit.xml --cov=appname --cov-report=xml:reports/coverage.xml --cov-report=html:reports/htmlcov --cov-report=term-missing
+
+      - name: Upload CI Reports Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-reports-python-${{ matrix.python-version }}
+          path: reports/

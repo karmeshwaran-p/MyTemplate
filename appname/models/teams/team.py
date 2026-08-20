@@ -4,6 +4,7 @@ from appname.billing_plans import plans_by_name, FreePlan
 
 logger = logging.getLogger(__name__)
 
+
 class Team(Model):
     """
     A team is a collection of users sharing the same resources.
@@ -15,16 +16,14 @@ class Team(Model):
     """
 
     id = db.Column(db.Integer(), primary_key=True)
-    creator_id = db.Column(db.ForeignKey("user.id"), index=True,
-                           nullable=False)
+    creator_id = db.Column(db.ForeignKey("user.id"), index=True, nullable=False)
 
     name = db.Column(db.String(255))
     # Plan may need to become DB backed when billing is introduced.
-    plan = db.Column(db.String(), default='free')
+    plan = db.Column(db.String(), default="free")
     plan_owner_id = db.Column(db.ForeignKey("user.id"))
     subscription_id = db.Column(db.String())
     billing_customer_id = db.Column(db.String())
-
 
     creator = db.relationship("User", foreign_keys=[creator_id])
     plan_owner = db.relationship("User", foreign_keys=[plan_owner_id])
@@ -34,7 +33,7 @@ class Team(Model):
         "hashid": "ID of User",
         "name": "Name of the team",
         "plan": "What plan the team was on",
-        "created": "When the team was created"
+        "created": "When the team was created",
     }
 
     def has_member(self, user):
@@ -62,7 +61,9 @@ class Team(Model):
     @transaction
     def create(cls, name, creator):
         new_team = cls(name=name, creator=creator)
-        new_team_member = ModelProxy.teams.TeamMember(team=new_team, user=creator, role='administrator', activated=True)
+        new_team_member = ModelProxy.teams.TeamMember(
+            team=new_team, user=creator, role="administrator", activated=True
+        )
 
         db.session.add(new_team)
         db.session.add(new_team_member)

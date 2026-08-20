@@ -10,10 +10,10 @@ from sqlalchemy_utils import force_auto_coercion, force_instant_defaults
 from sqlalchemy import MetaData
 
 convention = {
-    "ix": 'ix_%(column_0_label)s',
+    "ix": "ix_%(column_0_label)s",
     "uq": "uq_%(table_name)s_%(column_0_name)s",
     "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
-    "pk": "pk_%(table_name)s"
+    "pk": "pk_%(table_name)s",
 }
 
 metadata = MetaData(naming_convention=convention)
@@ -34,25 +34,31 @@ def get_or_none(model_class, ident, with_deleted=False):
         return None
     return obj
 
+
 def global_encryption_key_iv():
-    """ Must be a URL-safe base64-encoded 32-byte key.
+    """Must be a URL-safe base64-encoded 32-byte key.
     NEVER reveal the value of this.
     """
-    flask_secret = os.getenv('DB_ENCRYTPION_SECRET_KEY', 'REPLACE MEasdaappnamesdas#!3de*o0alas')
+    flask_secret = os.getenv(
+        "DB_ENCRYTPION_SECRET_KEY", "REPLACE MEasdaappnamesdas#!3de*o0alas"
+    )
     padded_secret = "{:<32}".format(flask_secret)[0:32]
     return base64.urlsafe_b64encode(padded_secret.encode())
 
+
 # Want to keep track of changes to your models? SQLAlchemy-Continuum will help!
 
+
 class QueryWithSoftDelete(BaseQuery):
-    """ By default, use soft deletes. See this blog post for usage details:
+    """By default, use soft deletes. See this blog post for usage details:
     https://blog.miguelgrinberg.com/post/implementing-the-soft-delete-pattern-with-flask-and-sqlalchemy
     Source: https://github.com/miguelgrinberg/sqlalchemy-soft-delete/blob/master/app.py
     License: MIT License
     """
+
     def __new__(cls, *args, **kwargs):
         obj = super(QueryWithSoftDelete, cls).__new__(cls)
-        with_deleted = kwargs.pop('_with_deleted', False)
+        with_deleted = kwargs.pop("_with_deleted", False)
         obj._with_deleted = with_deleted
         if len(args) > 0:
             super(QueryWithSoftDelete, obj).__init__(*args, **kwargs)
@@ -63,14 +69,15 @@ class QueryWithSoftDelete(BaseQuery):
         pass
 
     def with_deleted(self):
-        return self.__class__(self._only_full_mapper_zero('get'),
-                              session=db.session(), _with_deleted=True)
+        return self.__class__(
+            self._only_full_mapper_zero("get"), session=db.session(), _with_deleted=True
+        )
 
     def _get(self, *args, **kwargs):
         ident = args[0] if args else kwargs.get("ident")
         if ident is None:
             raise TypeError("QueryWithSoftDelete.get() missing required ident argument")
-        model_class = self._only_full_mapper_zero('get').class_
+        model_class = self._only_full_mapper_zero("get").class_
         return get_or_none(model_class, ident, with_deleted=True)
 
     def get(self, *args, **kwargs):
@@ -79,12 +86,15 @@ class QueryWithSoftDelete(BaseQuery):
             return obj
         return obj if obj is not None and not obj.deleted else None
 
+
 class Model(db.Model):
-    """ Add a timestamp to all models and allow for serialization."""
+    """Add a timestamp to all models and allow for serialization."""
+
     __abstract__ = True
 
-    created = db.Column(db.DateTime(timezone=True),
-                        server_default=db.func.now(), nullable=False)
+    created = db.Column(
+        db.DateTime(timezone=True), server_default=db.func.now(), nullable=False
+    )
     deleted = db.Column(db.Boolean(), default=False)
 
     query_class = QueryWithSoftDelete
@@ -92,7 +102,7 @@ class Model(db.Model):
     GDPR_EXPORT_COLUMNS = {}
 
     def __repr__(self):
-        if hasattr(self, 'id'):
+        if hasattr(self, "id"):
             key_val = self.id
         else:
             pk = self.__mapper__.primary_key
@@ -100,18 +110,18 @@ class Model(db.Model):
                 key_val = pk[0].name
             else:
                 key_val = self.__mapper__.primary_key._list[0].name
-        return '<{0} {1}>'.format(self.__class__.__name__, key_val)
+        return "<{0} {1}>".format(self.__class__.__name__, key_val)
 
     def delete(self, force=False):
-        """ if force is called - it removes it from the database.
+        """if force is called - it removes it from the database.
         Otherwise - performs a soft delete.
         """
         if force and self.can_be_destroyed:
             db.session.delete(self)
             return db.session.commit()
         if force and not self.can_be_destroyed:
-            logger.warning('Model {0} is not able to be force deleted'.format(self))
-            raise Exception('Cannot force destroy {0}'.format(self))
+            logger.warning("Model {0} is not able to be force deleted".format(self))
+            raise Exception("Cannot force destroy {0}".format(self))
         self.deleted = True
         return db.session.commit()
 
@@ -145,28 +155,34 @@ class Model(db.Model):
     @classmethod
     def get_by_hashid(self, hashid):
         from appname.extensions import hashids
+
         return get_or_none(self, hashids.decode_id(hashid))
 
     @property
     def hashid(self):
         from appname.extensions import hashids
+
         return hashids.encode_id(self.id)
 
+
 class ModelProxy:
-    """ A singleton that lazily imports models to handle
+    """A singleton that lazily imports models to handle
     circular import dependencies.
     Usage: ModelProxy.Model.query
     """
 
     def __getattribute__(self, key):
         import appname.models
+
         return appname.models.__getattribute__(key)
 
 
 ModelProxy = ModelProxy()
 
+
 def transaction(f):
-    """ Decorator for database (session) transactions."""
+    """Decorator for database (session) transactions."""
+
     @functools.wraps(f)
     def wrapper(*args, **kwds):
         try:
@@ -176,4 +192,5 @@ def transaction(f):
         except:  # noqa; This is intentional to ensure we rollback
             db.session.rollback()
             raise
+
     return wrapper

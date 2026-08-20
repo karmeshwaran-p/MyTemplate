@@ -1,12 +1,15 @@
-""" This file defines utilities used to enforce user roles. """
+"""This file defines utilities used to enforce user roles."""
+
 from flask import current_user
 from functools import wraps
 from enum import Enum
 
+
 class Roles(Enum):
-    GUEST = 'guest'
-    USER = 'user'
-    ADMIN = 'admin'
+    GUEST = "guest"
+    USER = "user"
+    ADMIN = "admin"
+
 
 def requires_roles(*roles):
     def wrapper(f):
@@ -20,5 +23,7 @@ def requires_roles(*roles):
             if get_user_role() not in roles:
                 raise
             return f(*args, **kwargs)
+
         return wrapped
+
     return wrapper

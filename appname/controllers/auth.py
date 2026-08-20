@@ -1,17 +1,32 @@
-from flask import Blueprint, render_template, flash, request, redirect, url_for, session, abort
+from flask import (
+    Blueprint,
+    render_template,
+    flash,
+    request,
+    redirect,
+    url_for,
+    session,
+    abort,
+)
 from flask_login import login_user, logout_user, login_required, current_user
 
 import appname.constants as constants
 
 from appname.forms import SimpleForm
-from appname.forms.login import LoginForm, SignupForm, RequestPasswordResetForm, ChangePasswordForm
+from appname.forms.login import (
+    LoginForm,
+    SignupForm,
+    RequestPasswordResetForm,
+    ChangePasswordForm,
+)
 from appname.models import db, get_or_none
 from appname.models.user import User
 from appname.models.teams import TeamMember
 from appname.mailers.auth import ConfirmEmail, ResetPassword
 from appname.extensions import login_manager, token, limiter
 
-auth = Blueprint('auth', __name__)
+auth = Blueprint("auth", __name__)
+
 
 @login_manager.user_loader
 def load_user(userid):
@@ -21,11 +36,13 @@ def load_user(userid):
         return None
     return get_or_none(User, user_id)
 
+
 @login_manager.unauthorized_handler
 def unauthorized():
-    session['after_login'] = request.url
-    login_hint = request.args.get('login_hint')
-    return redirect(url_for('auth.login', login_hint=login_hint))
+    session["after_login"] = request.url
+    login_hint = request.args.get("login_hint")
+    return redirect(url_for("auth.login", login_hint=login_hint))
+
 
 @auth.route("/login", methods=["GET", "POST"])
 @limiter.limit("20/minute")
@@ -37,7 +54,7 @@ def login():
 
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).one()
-        session['current_team_membership_id'] = user.primary_membership_id
+        session["current_team_membership_id"] = user.primary_membership_id
         login_user(user)
 
         flash("Logged in successfully.", "success")
@@ -45,29 +62,35 @@ def login():
 
     return render_template("auth/login.html", form=form)
 
+
 @auth.route("/signup", methods=["GET", "POST"])
 @limiter.limit("10/minute")
 def signup():
     if not constants.ALLOW_SIGNUPS:
         return abort(404)
 
-    form = SignupForm(invite_secret=request.args.get('invite_secret'))
+    form = SignupForm(invite_secret=request.args.get("invite_secret"))
 
     if form.validate_on_submit():
         team_secret = form.invite_secret.data
-        invite = (TeamMember.query.filter_by(invite_secret=team_secret, activated=False)
-                            .one_or_none())
+        invite = TeamMember.query.filter_by(
+            invite_secret=team_secret, activated=False
+        ).one_or_none()
 
         if invite:
-            user = User(form.email.data, form.password.data,
-                        email_confirmed=True, team=invite.team)
+            user = User(
+                form.email.data,
+                form.password.data,
+                email_confirmed=True,
+                team=invite.team,
+            )
             invite.user = user
             db.session.add(invite)
         else:
             user = User(form.email.data, form.password.data)
         db.session.add(user)
         db.session.commit()
-        session['current_team_membership_id'] = user.primary_membership_id
+        session["current_team_membership_id"] = user.primary_membership_id
         login_user(user)
 
         if constants.REQUIRE_EMAIL_CONFIRMATION:
@@ -77,13 +100,17 @@ def signup():
         flash("Welcome to appname.", "success")
         return redirect(request.args.get("next") or url_for("dashboard_home.index"))
 
-    return render_template("auth/signup.html", form=form, invite_secret=request.args.get('invite_secret'))
+    return render_template(
+        "auth/signup.html", form=form, invite_secret=request.args.get("invite_secret")
+    )
+
 
 @auth.route("/auth/logout")
 def logout():
     logout_user()
     session.clear()
     return redirect(url_for("main.home"))
+
 
 @auth.route("/confirm/<string:code>")
 def confirm(code):
@@ -106,10 +133,10 @@ def confirm(code):
     db.session.commit()
 
     if current_user == user:
-        flash('Succesfully confirmed your email', 'success')
+        flash("Succesfully confirmed your email", "success")
         return redirect(url_for("dashboard_home.index"))
     else:
-        flash('Confirmed your email. Please login to continue', 'success')
+        flash("Confirmed your email. Please login to continue", "success")
         return redirect(url_for("auth.login"))
 
 
@@ -125,19 +152,17 @@ def resend_confirmation():
     form = SimpleForm()
     if form.validate_on_submit():
         if ConfirmEmail(current_user).send():
-            flash(
-                "Sent confirmation to {}".format(
-                    current_user.email),
-                'success')
+            flash("Sent confirmation to {}".format(current_user.email), "success")
         return redirect(url_for("dashboard_home.index"))
 
-    return render_template('auth/resend_confirmation.html', form=form)
+    return render_template("auth/resend_confirmation.html", form=form)
+
 
 @auth.route("/auth/reset_password", methods=["GET", "POST"])
 @limiter.limit("20/hour")
 def request_password_reset():
     if not current_user.is_anonymous:
-        flash('You must be logged out to reset your password', 'warning')
+        flash("You must be logged out to reset your password", "warning")
         return redirect(url_for("dashboard_home.index"))
     form = RequestPasswordResetForm()
 
@@ -146,16 +171,17 @@ def request_password_reset():
         if user:
             ResetPassword(user).send()
             flash("We sent you a password reset email.", "success")
-            return redirect(url_for('auth.login'))
+            return redirect(url_for("auth.login"))
         else:
             flash("Hmm. That email doesn't appear to be registered ", "success")
     return render_template("auth/request_password_reset.html", form=form)
+
 
 @auth.route("/auth/reset_password/<string:code>", methods=["GET", "POST"])
 @limiter.limit("20/hour")
 def reset_password(code):
     if not current_user.is_anonymous:
-        flash('You must be logged out to reset your password', 'warning')
+        flash("You must be logged out to reset your password", "warning")
         return redirect(url_for("dashboard_home.index"))
 
     try:
@@ -191,7 +217,8 @@ def reauth():
         return redirect(request.args.get("next", url_for("user_settings.index")))
     return render_template("reauth.html", form=form)
 
-@auth.route('/invite/<hashid:invite_id>/join')
+
+@auth.route("/invite/<hashid:invite_id>/join")
 @login_required
 def join_team(invite_id):
     invite = get_or_none(TeamMember, invite_id)
@@ -201,7 +228,8 @@ def join_team(invite_id):
     invite.activate(current_user.id)
     return redirect(url_for("dashboard_home.index"))
 
-@auth.route('/join/<hashid:invite_id>/<string:secret>')
+
+@auth.route("/join/<hashid:invite_id>/<string:secret>")
 @limiter.limit("20/minute")
 def invite_page(invite_id, secret):
     invite = get_or_none(TeamMember, invite_id)

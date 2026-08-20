@@ -1,4 +1,4 @@
-    # API
+# API
 from flask import flash
 from flask_login import current_user, login_user
 from flask_dance.contrib.google import make_google_blueprint
@@ -12,10 +12,16 @@ from appname.models.user import User, OAuth
 
 
 blueprint = make_google_blueprint(
-    scope=["https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email",
-           "openid"],
-    storage=SQLAlchemyStorage(OAuth, db.session, user=lambda: current_user, cache=cache),
+    scope=[
+        "https://www.googleapis.com/auth/userinfo.profile",
+        "https://www.googleapis.com/auth/userinfo.email",
+        "openid",
+    ],
+    storage=SQLAlchemyStorage(
+        OAuth, db.session, user=lambda: current_user, cache=cache
+    ),
 )
+
 
 # create/login local user on successful OAuth login
 @oauth_authorized.connect_via(blueprint)
@@ -53,22 +59,25 @@ def google_logged_in(blueprint, token):
 
     if oauth.user:
         login_user(oauth.user)
-        flash("Welcome back.", 'success')
+        flash("Welcome back.", "success")
     elif current_user.is_authenticated and current_user.email == google_info["email"]:
         oauth.user = current_user
         db.session.add(oauth)
         db.session.commit()
-        flash("Successfully linked Google account.", 'success')
-    elif existing_user and existing_user.email == google_info['email']:
+        flash("Successfully linked Google account.", "success")
+    elif existing_user and existing_user.email == google_info["email"]:
         oauth.user = existing_user
         db.session.add(oauth)
         db.session.commit()
         login_user(existing_user)
-        flash("Successfully signed in as {}".format(existing_user.email), 'success')
+        flash("Successfully signed in as {}".format(existing_user.email), "success")
     else:
         # Create a new local user account for this user
-        user = User(email=google_info["email"], name=google_info["name"],
-                    email_confirmed=google_info["verified_email"])
+        user = User(
+            email=google_info["email"],
+            name=google_info["name"],
+            email_confirmed=google_info["verified_email"],
+        )
         # Associate the new local user account with the OAuth token
         oauth.user = user
         # Save and commit our database models
@@ -76,7 +85,7 @@ def google_logged_in(blueprint, token):
         db.session.commit()
         # Log in the new local user account
         login_user(user)
-        flash("Welcome to appname!", 'success')
+        flash("Welcome to appname!", "success")
 
     # Disable Flask-Dance's default behavior for saving the OAuth token
     return False

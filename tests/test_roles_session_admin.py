@@ -31,7 +31,9 @@ class TestAdminJobsAuth:
 
 @pytest.mark.usefixtures("testapp")
 class TestSessionHelper:
-    def test_current_membership_defaults_to_first_active_membership(self, testapp, monkeypatch):
+    def test_current_membership_defaults_to_first_active_membership(
+        self, testapp, monkeypatch
+    ):
         membership_1 = SimpleNamespace(id=1)
         membership_2 = SimpleNamespace(id=2)
         monkeypatch.setattr(
@@ -58,7 +60,9 @@ class TestSessionHelper:
             session["current_team_membership_id"] = 2
             assert session_helper.current_membership() == membership_2
 
-    def test_current_membership_redirects_when_session_membership_is_invalid(self, testapp, monkeypatch):
+    def test_current_membership_redirects_when_session_membership_is_invalid(
+        self, testapp, monkeypatch
+    ):
         membership_1 = SimpleNamespace(id=1)
         monkeypatch.setattr(
             session_helper,
@@ -74,4 +78,3 @@ class TestSessionHelper:
 
         assert response.status_code == 302
         assert response.location.endswith("/")
-

@@ -39,7 +39,9 @@ class DummyUpload:
 
 @pytest.mark.usefixtures("testapp")
 class TestDashboardActions:
-    def test_dashboard_home_redirects_to_memberships_when_user_has_no_active_team(self, testapp):
+    def test_dashboard_home_redirects_to_memberships_when_user_has_no_active_team(
+        self, testapp
+    ):
         login_as_user(testapp)
         user = User.lookup("user@example.com")
 
@@ -60,7 +62,9 @@ class TestDashboardActions:
         response = testapp.get(f"/dashboard/{other_team_hash}")
         assert response.status_code == 404
 
-    def test_team_dashboard_redirects_home_when_user_has_no_primary_membership(self, testapp):
+    def test_team_dashboard_redirects_home_when_user_has_no_primary_membership(
+        self, testapp
+    ):
         login_as_user(testapp)
         user, _, team_hash = user_team_and_hash()
 
@@ -122,7 +126,9 @@ class TestDashboardActions:
     def test_add_member_invalid_form_redirects(self, testapp, monkeypatch):
         login_as_user(testapp)
         _, _, team_hash = user_team_and_hash()
-        monkeypatch.setattr(team_controller.InviteMemberForm, "validate_on_submit", lambda _self: False)
+        monkeypatch.setattr(
+            team_controller.InviteMemberForm, "validate_on_submit", lambda _self: False
+        )
 
         response = testapp.post(
             f"/dashboard/{team_hash}/team/add_member",
@@ -142,7 +148,9 @@ class TestDashboardActions:
         )
 
         assert response.status_code == 302
-        invite = TeamMember.query.filter_by(team=team, invite_email="invitee@example.com").first()
+        invite = TeamMember.query.filter_by(
+            team=team, invite_email="invitee@example.com"
+        ).first()
         assert invite is not None
         assert invite.inviter == user
 
@@ -168,7 +176,11 @@ class TestDashboardActions:
         db.session.add(team)
         db.session.commit()
 
-        monkeypatch.setattr(team_controller.stripe, "customer_portal_link", lambda _customer_id: "https://billing.example.com")
+        monkeypatch.setattr(
+            team_controller.stripe,
+            "customer_portal_link",
+            lambda _customer_id: "https://billing.example.com",
+        )
 
         response = testapp.post(
             f"/dashboard/{team_hash}/team/billing_portal",
@@ -250,11 +262,18 @@ class TestDashboardActions:
     def test_remove_member_invalid_form_redirects(self, testapp, monkeypatch):
         login_as_user(testapp)
         user, team, team_hash = user_team_and_hash()
-        pending = TeamMember(team=team, invite_email="no-remove@example.com", role="team member", inviter=user)
+        pending = TeamMember(
+            team=team,
+            invite_email="no-remove@example.com",
+            role="team member",
+            inviter=user,
+        )
         db.session.add(pending)
         db.session.commit()
 
-        monkeypatch.setattr(team_controller.SimpleForm, "validate_on_submit", lambda _self: False)
+        monkeypatch.setattr(
+            team_controller.SimpleForm, "validate_on_submit", lambda _self: False
+        )
 
         response = testapp.post(
             f"/dashboard/{team_hash}/team/{hashids.encode_id(pending.id)}/remove_member",
@@ -267,7 +286,12 @@ class TestDashboardActions:
     def test_remove_pending_member_deletes_membership(self, testapp):
         login_as_user(testapp)
         user, team, team_hash = user_team_and_hash()
-        pending = TeamMember(team=team, invite_email="remove-me@example.com", role="team member", inviter=user)
+        pending = TeamMember(
+            team=team,
+            invite_email="remove-me@example.com",
+            role="team member",
+            inviter=user,
+        )
         db.session.add(pending)
         db.session.commit()
         invite_hash = hashids.encode_id(pending.id)
@@ -300,7 +324,11 @@ class TestDashboardActions:
         user, team, team_hash = user_team_and_hash()
         user_id = user.id
 
-        monkeypatch.setattr(storage, "upload", lambda _: DummyUpload(name="report.txt", object_name="file-1"))
+        monkeypatch.setattr(
+            storage,
+            "upload",
+            lambda _: DummyUpload(name="report.txt", object_name="file-1"),
+        )
 
         response = testapp.post(
             f"/dashboard/{team_hash}/files/add_file",
@@ -318,7 +346,9 @@ class TestDashboardActions:
         assert saved.user_id == user_id
         assert saved.description == "Quarterly report"
 
-    def test_files_dashboard_redirects_home_when_user_has_no_primary_membership(self, testapp):
+    def test_files_dashboard_redirects_home_when_user_has_no_primary_membership(
+        self, testapp
+    ):
         login_as_user(testapp)
         user, _, team_hash = user_team_and_hash()
         for membership in user.memberships:
@@ -352,7 +382,9 @@ class TestDashboardActions:
     def test_add_file_invalid_form_raises_type_error(self, testapp, monkeypatch):
         login_as_user(testapp)
         _, _, team_hash = user_team_and_hash()
-        monkeypatch.setattr(files_controller.FileForm, "validate_on_submit", lambda _self: False)
+        monkeypatch.setattr(
+            files_controller.FileForm, "validate_on_submit", lambda _self: False
+        )
 
         with pytest.raises(TypeError):
             testapp.post(
@@ -364,7 +396,9 @@ class TestDashboardActions:
     def test_download_file_redirects_to_storage_url(self, testapp, monkeypatch):
         login_as_user(testapp)
         user, team, team_hash = user_team_and_hash()
-        team_file = TeamFile(team=team, user=user, file_name="doc.txt", file_object_name="obj-2")
+        team_file = TeamFile(
+            team=team, user=user, file_name="doc.txt", file_object_name="obj-2"
+        )
         db.session.add(team_file)
         db.session.commit()
 
@@ -374,7 +408,9 @@ class TestDashboardActions:
 
         monkeypatch.setattr(storage, "get", lambda _: StoredObject())
 
-        response = testapp.get(f"/dashboard/{team_hash}/files/{hashids.encode_id(team_file.id)}")
+        response = testapp.get(
+            f"/dashboard/{team_hash}/files/{hashids.encode_id(team_file.id)}"
+        )
 
         assert response.status_code == 302
         assert response.location.endswith("/download/doc.txt")
@@ -382,12 +418,16 @@ class TestDashboardActions:
     def test_download_file_404_when_storage_returns_none(self, testapp, monkeypatch):
         login_as_user(testapp)
         user, team, team_hash = user_team_and_hash()
-        team_file = TeamFile(team=team, user=user, file_name="missing.txt", file_object_name="obj-404")
+        team_file = TeamFile(
+            team=team, user=user, file_name="missing.txt", file_object_name="obj-404"
+        )
         db.session.add(team_file)
         db.session.commit()
 
         monkeypatch.setattr(storage, "get", lambda _: None)
-        response = testapp.get(f"/dashboard/{team_hash}/files/{hashids.encode_id(team_file.id)}")
+        response = testapp.get(
+            f"/dashboard/{team_hash}/files/{hashids.encode_id(team_file.id)}"
+        )
         assert response.status_code == 404
 
     def test_destroy_file_404_for_invalid_team(self, testapp):
@@ -404,7 +444,9 @@ class TestDashboardActions:
     def test_destroy_file_removes_file_and_storage_object(self, testapp, monkeypatch):
         login_as_user(testapp)
         user, team, team_hash = user_team_and_hash()
-        team_file = TeamFile(team=team, user=user, file_name="old.txt", file_object_name="obj-3")
+        team_file = TeamFile(
+            team=team, user=user, file_name="old.txt", file_object_name="obj-3"
+        )
         db.session.add(team_file)
         db.session.commit()
 
@@ -428,10 +470,17 @@ class TestDashboardActions:
         assert db.session.get(TeamFile, team_file.id) is None
         assert stored.deleted
 
-    def test_destroy_file_removes_db_record_when_storage_object_missing(self, testapp, monkeypatch):
+    def test_destroy_file_removes_db_record_when_storage_object_missing(
+        self, testapp, monkeypatch
+    ):
         login_as_user(testapp)
         user, team, team_hash = user_team_and_hash()
-        team_file = TeamFile(team=team, user=user, file_name="nostorage.txt", file_object_name="obj-no-storage")
+        team_file = TeamFile(
+            team=team,
+            user=user,
+            file_name="nostorage.txt",
+            file_object_name="obj-no-storage",
+        )
         db.session.add(team_file)
         db.session.commit()
 

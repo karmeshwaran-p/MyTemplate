@@ -7,10 +7,10 @@ from flask_mail import Message
 
 from appname.extensions import mail, rq2
 
+
 @rq2.job
-def send_email_raw(to_emails, subject, html_body,
-                   text_body=None, conn=None, **kwargs):
-    """ Send emails.
+def send_email_raw(to_emails, subject, html_body, text_body=None, conn=None, **kwargs):
+    """Send emails.
     Params:
     * `conn`: Use to send multiple messages in the same connection
              (https://pythonhosted.org/Flask-Mail#bulk-emails)
@@ -32,8 +32,9 @@ def send_email_raw(to_emails, subject, html_body,
 
     return conn.send(message)
 
+
 class Mailer:
-    TEMPLATE = 'email/notification.html'
+    TEMPLATE = "email/notification.html"
     DEFAULT_SUBJECT = "New Message from appname"
     DEFAULT_LINK_TEXT = None
     DEFAULT_LINK_URL = None
@@ -48,14 +49,14 @@ class Mailer:
 
     @property
     def email_configured(self):
-        return os.getenv('MAIL_USERNAME') is not None
+        return os.getenv("MAIL_USERNAME") is not None
 
     def deliver_later(self, to_emails, subject, html_body, **kwargs):
         if not self.email_configured:
             print("EMAIL CONFIG is not setup")
             print(to_emails)
             print(subject)
-            print("-"*20)
+            print("-" * 20)
             print(html_body)
             return
 
@@ -68,7 +69,7 @@ class Mailer:
 
             print(to_emails)
             print(subject)
-            print("-"*20)
+            print("-" * 20)
             print(html_body)
             return
 

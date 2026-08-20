@@ -6,6 +6,7 @@ from flask_caching import Cache
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_login import LoginManager
 from flask_assets import Environment
+
 # from flask_socketio import SocketIO
 from flask_wtf.csrf import CSRFProtect
 from flask_rq2 import RQ
@@ -38,7 +39,7 @@ login_manager.session_protection = "strong"
 # TODO:
 login_manager.refresh_view = "auth.reauth"
 login_manager.needs_refresh_message = (
-    u"To protect your account, please reauthenticate to access this page."
+    "To protect your account, please reauthenticate to access this page."
 )
 login_manager.needs_refresh_message_category = "info"
 

@@ -105,10 +105,16 @@ class TestStripeWebhooks:
         db.session.commit()
         team_id = team.id
 
-        event = DummyStripeEvent("customer.subscription.deleted", {"id": "sub_deleted_1"})
-        monkeypatch.setattr(webhook_controller.stripe, "parse_webhook", lambda *_: event)
+        event = DummyStripeEvent(
+            "customer.subscription.deleted", {"id": "sub_deleted_1"}
+        )
+        monkeypatch.setattr(
+            webhook_controller.stripe, "parse_webhook", lambda *_: event
+        )
 
-        response = testapp.post("/webhooks/stripe", data="{}", headers={"Stripe-Signature": "sig"})
+        response = testapp.post(
+            "/webhooks/stripe", data="{}", headers={"Stripe-Signature": "sig"}
+        )
 
         assert response.status_code == 200
         assert db.session.get(Team, team_id).plan == "free"
@@ -131,16 +137,22 @@ class TestStripeWebhooks:
                 "plan": {"id": "price_unknown_for_fallback"},
             },
         )
-        monkeypatch.setattr(webhook_controller.stripe, "parse_webhook", lambda *_: event)
+        monkeypatch.setattr(
+            webhook_controller.stripe, "parse_webhook", lambda *_: event
+        )
 
-        response = testapp.post("/webhooks/stripe", data="{}", headers={"Stripe-Signature": "sig"})
+        response = testapp.post(
+            "/webhooks/stripe", data="{}", headers={"Stripe-Signature": "sig"}
+        )
 
         assert response.status_code == 200
         refreshed = db.session.get(Team, team_id)
         assert refreshed.billing_customer_id == "cus_created_1"
         assert refreshed.plan == "monthly_premium"
 
-    def test_subscription_updated_with_cancelled_downgrades_team(self, testapp, monkeypatch):
+    def test_subscription_updated_with_cancelled_downgrades_team(
+        self, testapp, monkeypatch
+    ):
         team = default_team()
         team.subscription_id = "sub_updated_1"
         team.plan = "annual_premium"
@@ -152,9 +164,13 @@ class TestStripeWebhooks:
             "customer.subscription.updated",
             {"id": "sub_updated_1", "status": "cancelled"},
         )
-        monkeypatch.setattr(webhook_controller.stripe, "parse_webhook", lambda *_: event)
+        monkeypatch.setattr(
+            webhook_controller.stripe, "parse_webhook", lambda *_: event
+        )
 
-        response = testapp.post("/webhooks/stripe", data="{}", headers={"Stripe-Signature": "sig"})
+        response = testapp.post(
+            "/webhooks/stripe", data="{}", headers={"Stripe-Signature": "sig"}
+        )
 
         assert response.status_code == 200
         assert db.session.get(Team, team_id).plan == "free"
@@ -175,16 +191,22 @@ class TestStripeWebhooks:
                 "customer": "cus_checkout_1",
             },
         )
-        monkeypatch.setattr(webhook_controller.stripe, "parse_webhook", lambda *_: event)
+        monkeypatch.setattr(
+            webhook_controller.stripe, "parse_webhook", lambda *_: event
+        )
 
-        response = testapp.post("/webhooks/stripe", data="{}", headers={"Stripe-Signature": "sig"})
+        response = testapp.post(
+            "/webhooks/stripe", data="{}", headers={"Stripe-Signature": "sig"}
+        )
 
         assert response.status_code == 200
         refreshed = db.session.get(Team, team_id)
         assert refreshed.subscription_id == "sub_checkout_1"
         assert refreshed.billing_customer_id == "cus_checkout_1"
 
-    def test_checkout_completed_with_unknown_team_returns_question_mark(self, testapp, monkeypatch):
+    def test_checkout_completed_with_unknown_team_returns_question_mark(
+        self, testapp, monkeypatch
+    ):
         event = DummyStripeEvent(
             "checkout.session.completed",
             {
@@ -193,9 +215,13 @@ class TestStripeWebhooks:
                 "customer": "cus_checkout_2",
             },
         )
-        monkeypatch.setattr(webhook_controller.stripe, "parse_webhook", lambda *_: event)
+        monkeypatch.setattr(
+            webhook_controller.stripe, "parse_webhook", lambda *_: event
+        )
 
-        response = testapp.post("/webhooks/stripe", data="{}", headers={"Stripe-Signature": "sig"})
+        response = testapp.post(
+            "/webhooks/stripe", data="{}", headers={"Stripe-Signature": "sig"}
+        )
 
         assert response.status_code == 200
         assert response.get_data(as_text=True) == "?"
